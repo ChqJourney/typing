@@ -1,10 +1,13 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import FallingLetter from './FallingLetter.svelte';
   import Bullet from './Bullet.svelte';
   import GameStats from './GameStats.svelte';
   import GameOverModal from './GameOverModal.svelte';
   import LevelCompleteModal from './LevelCompleteModal.svelte';
+  import { ScoreManager } from '../scoreManager';
+
+  const dispatch = createEventDispatcher();
 
   interface Letter {
     id: string;
@@ -291,11 +294,38 @@
     clearInterval(gameLoop);
     clearInterval(letterSpawner);
     clearInterval(timeUpdater);
+    
+    // 保存分数到localStorage
+    saveScore();
+  }
+
+  // 保存分数
+  function saveScore() {
+    const user = ScoreManager.getCurrentUser();
+    if (user) {
+      const scoreData = {
+        finalScore: score,
+        levelReached: currentLevel,
+        won: gameWon,
+        timestamp: Date.now()
+      };
+      
+      ScoreManager.saveScore('typing', scoreData);
+    }
   }
 
   // 重新开始游戏
   function restartGame() {
     startGame();
+  }
+  
+  // 退出游戏回到主页
+  function exitGame() {
+    // 清理游戏状态
+    clearInterval(gameLoop);
+    clearInterval(letterSpawner);
+    clearInterval(timeUpdater);
+    dispatch('exit');
   }
 
   // 响应关卡变化，更新字母生成频率
@@ -317,6 +347,10 @@
 </script>
 
 <div class="game-container">
+  <div class="back-button-container">
+    <button class="back-button" on:click={exitGame}>← 返回游戏大厅</button>
+  </div>
+  
   <div class="game-area" style="width: {GAME_WIDTH}px; height: {GAME_HEIGHT}px;">
     <!-- 游戏场景 -->
     <div class="scene">
@@ -366,7 +400,10 @@
         <h1>打字游戏</h1>
         <p>字母从上方掉落，快速按下对应按键击毁它们！</p>
         <p>每关30秒，错过3个字母即失败</p>
-        <button on:click={startGame} class="start-btn">开始游戏</button>
+        <div class="button-group">
+          <button on:click={startGame} class="start-btn">开始游戏</button>
+          <button on:click={exitGame} class="exit-btn">返回大厅</button>
+        </div>
       </div>
     </div>
   {/if}
@@ -401,6 +438,30 @@
     padding: 2rem;
     min-height: 100vh;
     background: radial-gradient(ellipse at center, #2a2a3e 0%, #1e1e2e 100%);
+    position: relative;
+  }
+  
+  .back-button-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+  }
+  
+  .back-button {
+    background: rgba(74, 158, 255, 0.2);
+    border: 1px solid #4a9eff;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+  }
+  
+  .back-button:hover {
+    background: rgba(74, 158, 255, 0.4);
+    transform: translateY(-2px);
   }
 
   .game-area {
@@ -479,6 +540,13 @@
     margin-bottom: 1rem;
     color: #b0b0b0;
   }
+  
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+  }
 
   .start-btn {
     background: linear-gradient(45deg, #4a9eff, #2196f3);
@@ -495,6 +563,22 @@
   .start-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(74, 158, 255, 0.4);
+  }
+  
+  .exit-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid #4a9eff;
+    color: white;
+    padding: 1rem 2rem;
+    font-size: 1.5rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .exit-btn:hover {
+    background: rgba(74, 158, 255, 0.2);
+    transform: translateY(-2px);
   }
 
   @keyframes pulse {
@@ -514,6 +598,41 @@
     100% {
       transform: scale(2);
       opacity: 0;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .game-container {
+      flex-direction: column;
+      padding: 1rem;
+    }
+    
+    .back-button-container {
+      top: 10px;
+      left: 10px;
+    }
+    
+    .start-content {
+      padding: 2rem;
+      width: 90%;
+    }
+    
+    .start-content h1 {
+      font-size: 2rem;
+    }
+    
+    .start-content p {
+      font-size: 1rem;
+    }
+    
+    .button-group {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .start-btn, .exit-btn {
+      font-size: 1.2rem;
+      padding: 0.8rem 1.5rem;
     }
   }
 </style>
