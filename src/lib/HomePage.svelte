@@ -1,9 +1,13 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { createEventDispatcher } from 'svelte';
   import GameCard from './GameCard.svelte';
   import UserInfo from './UserInfo.svelte';
+  import Scoreboard from './Scoreboard.svelte';
   
   const dispatch = createEventDispatcher();
+  
+  let showScoreboard = $state(false);
   
   interface Game {
     id: string;
@@ -31,10 +35,17 @@
   function handleGameSelect(gameId: string) {
     dispatch('gameSelect', { gameId });
   }
+  
+  onMount(() => {
+    window.addEventListener('openScoreboard', () => {
+      showScoreboard = true;
+    });
+  });
 </script>
 
 <div class="container">
   <UserInfo />
+  <Scoreboard bind:visible={showScoreboard} />
   <header>
     <h1>游戏集合</h1>
     <p>选择一个游戏开始玩耍</p>

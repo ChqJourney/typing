@@ -39,31 +39,40 @@
       showForm = false;
     }
   }
+  
+  function openScoreboard() {
+    const event = new CustomEvent('openScoreboard');
+    window.dispatchEvent(event);
+  }
 </script>
 
 <div class="user-info">
-  {#if currentUser}
-    <div class="user-profile">
-      <span class="username" on:click={startEdit}>{currentUser.username}</span>
-      <button class="logout-btn" on:click={logout} aria-label="Logout">🚪</button>
-    </div>
-  {:else}
-    {#if showForm}
-      <div class="username-form">
-        <input
-          type="text"
-          bind:value={usernameInput}
-          placeholder="输入用户名"
-          on:keydown={handleKeydown}
-          autofocus
-        />
-        <button class="save-btn" on:click={saveUsername}>保存</button>
-        <button class="cancel-btn" on:click={() => showForm = false}>取消</button>
+  <div class="user-controls">
+    <button class="scoreboard-btn" on:click={openScoreboard} title="查看排行榜">🏆</button>
+    
+    {#if currentUser}
+      <div class="user-profile">
+        <span class="username" on:click={startEdit}>{currentUser.username}</span>
+        <button class="logout-btn" on:click={logout} aria-label="Logout">🚪</button>
       </div>
     {:else}
-      <button class="login-btn" on:click={() => showForm = true}>登录</button>
+      {#if showForm}
+        <div class="username-form">
+          <input
+            type="text"
+            bind:value={usernameInput}
+            placeholder="输入用户名"
+            on:keydown={handleKeydown}
+            autofocus
+          />
+          <button class="save-btn" on:click={saveUsername}>保存</button>
+          <button class="cancel-btn" on:click={() => showForm = false}>取消</button>
+        </div>
+      {:else}
+        <button class="login-btn" on:click={() => showForm = true}>登录</button>
+      {/if}
     {/if}
-  {/if}
+  </div>
 </div>
 
 <style>
@@ -72,6 +81,32 @@
     top: 20px;
     right: 20px;
     z-index: 100;
+  }
+  
+  .user-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .scoreboard-btn {
+    background: rgba(255, 215, 0, 0.2);
+    border: 1px solid gold;
+    color: gold;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  
+  .scoreboard-btn:hover {
+    background: rgba(255, 215, 0, 0.4);
+    transform: scale(1.1);
   }
 
   .user-profile {
@@ -175,6 +210,11 @@
     .user-info {
       top: 10px;
       right: 10px;
+    }
+    
+    .user-controls {
+      flex-direction: column;
+      align-items: flex-end;
     }
     
     .username-form {
